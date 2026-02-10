@@ -23,7 +23,7 @@ function _(str) {
 
 function MyDesklet(metadata, desklet_id) {
 	// translation init: if installed in user context, switch to translations in user's home dir
-	if(!DESKLET_ROOT.startsWith("/usr/share/")) {
+	if (!DESKLET_ROOT.startsWith("/usr/share/")) {
 		Gettext.bindtextdomain(UUID, GLib.get_home_dir() + "/.local/share/locale");
 	}
 	this._init(metadata, desklet_id);
@@ -48,17 +48,17 @@ function getImageAtScale(imageFileName, width, height, width2 = 0, height2 = 0) 
 		pixBuf.get_rowstride()
 	);
 
-	let actor = new Clutter.Actor({width: width2, height: height2});
-    actor.set_content(image);
-    
-    return actor;
+	let actor = new Clutter.Actor({ width: width2, height: height2 });
+	actor.set_content(image);
+
+	return actor;
 }
 
 
 MyDesklet.prototype = {
 	__proto__: Desklet.Desklet.prototype,
 
-	_init: function(metadata, desklet_id) {
+	_init: function (metadata, desklet_id) {
 		Desklet.Desklet.prototype._init.call(this, metadata);
 
 		// initialize settings
@@ -75,13 +75,13 @@ MyDesklet.prototype = {
 		this.settings.bindProperty(Settings.BindingDirection.IN, "text-color", "customTextColor", this.on_setting_changed);
 		this.settings.bindProperty(Settings.BindingDirection.IN, "file", "file", this.on_setting_changed);
 		this.settings.bindProperty(Settings.BindingDirection.IN, "edit-cmd", "editCmd", this.on_setting_changed);
-        this.settings.bindProperty(Settings.BindingDirection.IN, "wrap-scale-size", "wrapScaleSize", this.on_setting_changed); 
+		this.settings.bindProperty(Settings.BindingDirection.IN, "wrap-scale-size", "wrapScaleSize", this.on_setting_changed);
 
 		// initialize desklet gui
 		this.setupUI();
 	},
 
-	setupUI: function() {
+	setupUI: function () {
 		// defaults and initial values
 		this.notecontent = "";
 
@@ -91,11 +91,11 @@ MyDesklet.prototype = {
 		file.load_contents_async(null, (file, response) => {
 			try {
 				let [success, contents, tag] = file.load_contents_finish(response);
-				if(success) {
+				if (success) {
 					let lines = contents.toString().split('\n');
-					for(var i = 0;i < lines.length;i++) {
+					for (var i = 0; i < lines.length; i++) {
 						let fields = lines[i].split(',');
-						if(fields.length != 9) { continue; }
+						if (fields.length != 9) { continue; }
 						let style = new Array();
 						style['name'] = fields[0];
 						style['imagePath'] = fields[1];
@@ -110,7 +110,7 @@ MyDesklet.prototype = {
 					}
 				}
 				GLib.free(contents);
-			} catch(err) {
+			} catch (err) {
 				global.log(err.message);
 			}
 
@@ -122,23 +122,23 @@ MyDesklet.prototype = {
 		this.refreshDecoration();
 	},
 
-	loadText: function(reloadGraphics = false) {
+	loadText: function (reloadGraphics = false) {
 		// get notes text file path
 		this.finalPath = decodeURIComponent(this.file.replace("file://", ""));
-		if(this.finalPath == "") this.finalPath = "note.txt"; // in home dir
+		if (this.finalPath == "") this.finalPath = "note.txt"; // in home dir
 		// read file async
 		let file = Gio.file_new_for_path(this.finalPath);
 		file.load_contents_async(null, (file, response) => {
 			try {
 				let [success, contents, tag] = file.load_contents_finish(response);
-				if(success) {
+				if (success) {
 					this.notecontent = contents.toString();
 				} else {
 					// error reading file - maybe the file does not exist
 					this.notecontent = _("Can't read text file.\nSelect a file in settings.\n\nClick here to edit.");
 				}
 				GLib.free(contents);
-			} catch(err) {
+			} catch (err) {
 				this.notecontent = err.message;
 			}
 
@@ -150,8 +150,8 @@ MyDesklet.prototype = {
 		this.timeout = Mainloop.timeout_add_seconds(2, Lang.bind(this, this.loadText));
 	},
 
-	refreshDesklet: function(reloadGraphics = false) {
-		if(reloadGraphics) {
+	refreshDesklet: function (reloadGraphics = false) {
+		if (reloadGraphics) {
 
 			// set default image
 			this.bgImg = "none";
@@ -164,8 +164,8 @@ MyDesklet.prototype = {
 			this.size_width = 130;
 			this.size_height = 130;
 
-			for(var i = 0;i < this.imageIndex.length;i++) {
-				if(this.imageIndex[i]['name'] == this.style) {
+			for (var i = 0; i < this.imageIndex.length; i++) {
+				if (this.imageIndex[i]['name'] == this.style) {
 					this.default_notepad_label_top = this.imageIndex[i]['marginTop'];
 					this.default_notepad_label_right = this.imageIndex[i]['marginRight'];
 					this.default_notepad_label_bottom = this.imageIndex[i]['marginBottom'];
@@ -175,8 +175,8 @@ MyDesklet.prototype = {
 					this.bgImg = this.imageIndex[i]['imagePath'];
 					this.textColor =
 						this.customTextColor === "rgba(0,0,0,0)"
-						? this.imageIndex[i]['defaultTextColor']
-						: this.customTextColor;
+							? this.imageIndex[i]['defaultTextColor']
+							: this.customTextColor;
 					break;
 				}
 			}
@@ -193,63 +193,75 @@ MyDesklet.prototype = {
 			// create elements
 			this.notepad =
 				this.bgImg === "none"
-				? new Clutter.Actor()
-				: getImageAtScale(DESKLET_ROOT + this.bgImg, this.desklet_width, this.desklet_height); // background
+					? new Clutter.Actor()
+					: getImageAtScale(DESKLET_ROOT + this.bgImg, this.desklet_width, this.desklet_height); // background
 
 			this.container = new St.Group(); // container for labels
 
-			this.notetext = new St.Label({style_class:"notetext"});
-			this.notetext.set_position(Math.round(this.label_left), Math.round(this.label_top));
-			this.notetext.set_size(this.desklet_width - this.label_left - this.label_right, this.desklet_height - this.label_top - this.label_bottom);
+			this.notetext = new St.Label({ style_class: "notetext" });
 			this.notetext.style = "font-family: '" + this.font + "';"
-								+ "font-size: " + this.sizeFont + "px;"
-								+ "color:" + this.textColor + ";"
-								+ "font-weight:" + (this.fontBold ? "bold" : "normal") + ";"
-								+ "font-style:" + (this.fontItalic ? "italic" : "normal") + ";";
+				+ "font-size: " + this.sizeFont + "px;"
+				+ "color:" + this.textColor + ";"
+				+ "font-weight:" + (this.fontBold ? "bold" : "normal") + ";"
+				+ "font-style:" + (this.fontItalic ? "italic" : "normal") + ";";
 
-			// add actor
-            this.notepad.remove_all_children();
-            this.notepad.add_actor(this.container);            
-			this.container.add_actor(this.notetext);
-            this.setContent(this.notepad); // set root element
+			// wrap label in a ScrollView for scrollable long notes
+			let scrollBox = new St.BoxLayout({ vertical: true });
+			scrollBox.add_actor(this.notetext);
+
+			this.scrollView = new St.ScrollView({
+				x: Math.round(this.label_left),
+				y: Math.round(this.label_top),
+				width: this.desklet_width - this.label_left - this.label_right,
+				height: this.desklet_height - this.label_top - this.label_bottom,
+				enable_mouse_scrolling: true
+			});
+			this.scrollView.set_policy(St.PolicyType.NEVER, St.PolicyType.AUTOMATIC);
+			this.scrollView.add_actor(scrollBox);
+
+			// add actors
+			this.notepad.remove_all_children();
+			this.notepad.add_actor(this.container);
+			this.container.add_actor(this.scrollView);
+			this.setContent(this.notepad); // set root element
 
 
 			//Main.notifyError("Complete Refresh Done", " "); // debug
 		}
 
-        //word-wrap: as notetext is a label, it cannot be word-wrapped automatically, so 
-        //manual word-wrapping is needed. This one estimates width (number of chars) 
-        let width = (this.desklet_width / this.sizeFont * this.wrapScaleSize) | 0;
-        let arr = this.notecontent.split("\n");
-        for (let i = 0; i < arr.length; i++) {
-            if (arr[i].length > width)
-              arr[i] = this.stringDivider(arr[i], width, "\n");
-        }
-        let res = arr.join("\n");
-               
+		//word-wrap: as notetext is a label, it cannot be word-wrapped automatically, so 
+		//manual word-wrapping is needed. This one estimates width (number of chars) 
+		let width = (this.desklet_width / this.sizeFont * this.wrapScaleSize) | 0;
+		let arr = this.notecontent.split("\n");
+		for (let i = 0; i < arr.length; i++) {
+			if (arr[i].length > width)
+				arr[i] = this.stringDivider(arr[i], width, "\n");
+		}
+		let res = arr.join("\n");
+
 		// refresh text
 		this.notetext.set_text(res);
 
 		//Main.notifyError("Text Refresh Done", " "); // debug
 	},
 
-    stringDivider: function(str, width, spaceReplacer) {
-        if (str.length>width) {
-            let p=width
-            for (;p>0 && str[p]!=' ' && str[p]!='\n' ;p--) {
-            }
-            if (p>0) {
-                let left = str.substring(0, p);
-                let right = str.substring(p+1);
-                return left + spaceReplacer + this.stringDivider(right, width, spaceReplacer);
-            }
-        }
-        return str;
-    },
+	stringDivider: function (str, width, spaceReplacer) {
+		if (str.length > width) {
+			let p = width
+			for (; p > 0 && str[p] != ' ' && str[p] != '\n'; p--) {
+			}
+			if (p > 0) {
+				let left = str.substring(0, p);
+				let right = str.substring(p + 1);
+				return left + spaceReplacer + this.stringDivider(right, width, spaceReplacer);
+			}
+		}
+		return str;
+	},
 
-	refreshDecoration: function() {
+	refreshDecoration: function () {
 		// desklet label (header)
-		if(this.useCustomLabel == true)
+		if (this.useCustomLabel == true)
 			this.setHeader(this.customLabel)
 		else
 			this.setHeader(_("Notepad"));
@@ -259,7 +271,7 @@ MyDesklet.prototype = {
 		this._updateDecoration();
 	},
 
-	on_setting_changed: function() {
+	on_setting_changed: function () {
 		// update decoration settings
 		this.refreshDecoration();
 
@@ -268,13 +280,13 @@ MyDesklet.prototype = {
 		this.loadText(true);
 	},
 
-	on_desklet_clicked: function() {
-		if(this.editCmd != "") {
-			Util.spawnCommandLine(this.editCmd.replace("%f", '"'+this.finalPath+'"'));
+	on_desklet_clicked: function () {
+		if (this.editCmd != "") {
+			Util.spawnCommandLine(this.editCmd.replace("%f", '"' + this.finalPath + '"'));
 		}
 	},
 
-	on_desklet_removed: function() {
+	on_desklet_removed: function () {
 		Mainloop.source_remove(this.timeout);
 	}
 }
